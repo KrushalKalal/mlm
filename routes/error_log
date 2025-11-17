@@ -1,0 +1,4 @@
+[24-Mar-2025 22:56:08 America/Chicago] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\Facades\Route" not found in /home4/wwwri0xx/myrightshadow.com/routes/web.php:36
+Stack trace:
+#0 {main}
+  thrown in /home4/wwwri0xx/myrightshadow.com/routes/web.php on line 36
