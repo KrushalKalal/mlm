@@ -106,156 +106,89 @@ class FrontController extends Controller
 
     public function checkout(Request $request)
     {
-        // dd("hear");
+        // Basic manual validation
         if ($request->mobile_no != $request->confirm_phone) {
             return response()->json(['success' => 'false', 'message' => 'Check Mobile Number']);
-            ;
         } else if ($request->mobile_no == null) {
             return response()->json(['success' => 'false', 'message' => 'Check Mobile Number']);
-            ;
         } else if ($request->sponsor_id == null) {
             return response()->json(['success' => 'false', 'message' => 'Sponsor Not Found']);
-            ;
         } else if ($request->password == null) {
-            return response()->json(['success' => 'false', 'message' => 'Sponsor Not Found']);
-            ;
+            return response()->json(['success' => 'false', 'message' => 'Password is required']);
         } else if ($request->name == null) {
             return response()->json(['success' => 'false', 'message' => 'Please Enter User Name']);
-            ;
         } else if ($request->password_confirmation != $request->password) {
             return response()->json(['success' => 'false', 'message' => 'Check Password']);
-            ;
-        } else {
-
-            $db = db::table("users_list")->where("member_id", $request->sponsor_id)->first();
-            if ($db) {
-                // ********** sp ******* 
-                if ($db) {
-                    $status = $db->status;
-                    if ($status == 1) {
-                        $count = db::table("users_list")->where('sponsor_id', $request->sponsor_id)->count();
-                        if ($count >= 10) {
-                            return response()->json(['success' => 'false', 'message' => 'Sponsor Is Not Active']);
-                        } else {
-                            $count = db::table("users_list")->where('role', '!=', 'admin')->count() + 1; // Increment count by 1
-                            $new = 'SW' . str_pad($count, 3, '0', STR_PAD_LEFT);                            //   ******************* LIST ************* 
-                            $insertedId = db::table("users_list")->insertGetId([
-                                'package_id' => $request->package_id,
-                                'member_id' => $new,
-                                'name' => $request->name,
-                                'sponsor_id' => $request->sponsor_id,
-                                'email' => $request->email,
-                                'mobile_no' => $request->mobile_no,
-                                'confirm_phone' => $request->confirm_phone,
-                                'state' => $request->state,
-                                'city' => $request->city,
-                                'e_p' => $request->password,
-                                'password' => Hash::make($request->password),
-                                'status' => "0",
-                                'role' => "user",
-                                'payment_receipt' => $request->hasFile('payment_receipt') ? time() . 'image.' . $request->file('payment_receipt')->getClientOriginalExtension() : null,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
-
-                            // Move the uploaded file if exists
-                            if ($request->hasFile('payment_receipt')) {
-                                $image = $request->file('payment_receipt');
-                                $imageName = time() . 'image.' . $image->getClientOriginalExtension();
-                                $image->move(public_path('images'), $imageName);
-                            }
-
-                            $lenth = 0;
-                            $i = 0;
-                            $getnext = [];
-
-                            for ($i = 0; $i <= $lenth; $i++) {
-                                if ($i == 0) {
-                                    $users = db::table("users_list")->where('sponsor_id', $request->sponsor_id)
-                                        ->where('role', '!=', 'admin')
-                                        ->where('id', '!=', $insertedId)
-                                        ->count();
-
-                                    if ($users >= 3) {
-                                        ++$lenth;
-                                        $userslenth = db::table("users_list")->where('sponsor_id', $request->sponsor_id)->get();
-                                        foreach ($userslenth as $row) {
-                                            $getnext[] = $row->member_id;
-                                        }
-                                    } else {
-                                        $nextLevelUsers = db::table("users_list")->where('refer_id', $request->sponsor_id)
-                                            ->where('role', '!=', 'admin')
-                                            ->count();
-                                        if ($nextLevelUsers <= 2 || $nextLevelUsers == 0) {
-
-                                            $dbget = db::table("users_list")->where("id", $insertedId)->update(["refer_id" => $request->sponsor_id]);
-                                            $users = db::table("users_list")->where("id", $insertedId)->first();
-                                            $uname = $users->name;
-                                            $member = $users->member_id;
-                                            $password = $users->e_p;
-                                            return response()->json(['success' => 'true', 'message' => 'User Add', 'lenth' => $i, 'name' => $uname, 'meid' => $member, 'pwd' => $password]);
-                                        } else {
-                                            ++$lenth;
-                                            $nextLevelUsers = db::table("users_list")->where('refer_id', $request->sponsor_id)->get();
-                                            foreach ($nextLevelUsers as $row) {
-                                                $getnext[] = $row->member_id;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    foreach ($getnext as $key => $value) {
-                                        $users = db::table("users_list")->where('sponsor_id', $value)
-                                            ->where('role', '!=', 'admin')
-                                            ->where('id', "!=", $insertedId)->count();
-                                        if ($users >= 3) {
-                                            $nextLevelUsers = db::table("users_list")->where('sponsor_id', $value)
-                                                ->where('role', '!=', 'admin')
-                                                ->get();
-                                            foreach ($nextLevelUsers as $row) {
-
-                                                $getnext[] = $row->member_id;
-                                            }
-                                        } else {
-
-                                            $nextLevelUsers = db::table("users_list")->where('refer_id', $value)
-                                                ->where('role', '!=', 'admin')
-                                                ->count();
-                                            if ($nextLevelUsers <= 2) {
-                                                $dbget = db::table("users_list")->where("id", $insertedId)->update(["refer_id" => $value]);
-                                                $users = db::table("users_list")->where("id", $insertedId)
-                                                    ->where('role', '!=', 'admin')
-                                                    ->first();
-                                                $uname = $users->name;
-                                                $member = $users->member_id;
-                                                $password = $users->e_p;
-                                                return response()->json(['success' => 'true', 'message' => 'User Add', 'lenth' => $i, 'name' => $uname, 'meid' => $member, 'pwd' => $password]);
-                                            } else {
-                                                $nextLevelUsers = db::table("users_list")->where('sponsor_id', $value)->get();
-                                                foreach ($nextLevelUsers as $row) {
-
-                                                    $getnext[] = $row->member_id;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                }
-                            }
-                            //   ******************* LIST ************* 
-                        }
-                    } else {
-                        return response()->json(['success' => 'false', 'message' => 'Sponsor Number Is Not Active']);
-                        ;
-                    }
-                }
-                // ********** sp ******* 
-
-
-            } else {
-                return response()->json(['success' => 'false', 'message' => 'Sponsor Not Found !!!']);
-                ;
-            }
         }
+
+        // Direction mandatory
+        if (!$request->direction || !in_array($request->direction, ['left', 'right'])) {
+            return response()->json(['success' => 'false', 'message' => 'Please select direction (left/right)']);
+        }
+
+        // Find sponsor in users_list by member_id
+        $db = DB::table('users_list')->where('member_id', $request->sponsor_id)->first();
+
+        if (!$db) {
+            return response()->json(['success' => 'false', 'message' => 'Sponsor Not Found !!!']);
+        }
+
+        // Sponsor found – check active
+        if ($db->status != 1) {
+            return response()->json(['success' => 'false', 'message' => 'Sponsor Number Is Not Active']);
+        }
+
+        // (OPTIONAL) You had this 10 users check – keep or remove as you wish
+        $count = DB::table('users_list')->where('sponsor_id', $request->sponsor_id)->count();
+        if ($count >= 10) {
+            // if you really want this cap; if not, just remove this block
+            return response()->json(['success' => 'false', 'message' => 'Sponsor Is Not Active']);
+        }
+
+        // Generate new member_id (same as your logic)
+        $totalUsers = DB::table('users_list')->where('role', '!=', 'admin')->count() + 1;
+        $newMemberId = 'SW' . str_pad($totalUsers, 3, '0', STR_PAD_LEFT);
+
+        // Handle payment_receipt name if provided
+        $imageName = null;
+        if ($request->hasFile('payment_receipt')) {
+            $image = $request->file('payment_receipt');
+            $imageName = time() . 'image.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images'), $imageName);
+        }
+
+        // Insert user
+        $insertedId = DB::table('users_list')->insertGetId([
+            'package_id' => $request->package_id,
+            'member_id' => $newMemberId,
+            'name' => $request->name,
+            'sponsor_id' => $request->sponsor_id,
+            'refer_id' => $request->sponsor_id,       // parent in tree
+            'direction' => $request->direction,        // left / right
+            'email' => $request->email,
+            'mobile_no' => $request->mobile_no,
+            'confirm_phone' => $request->confirm_phone,
+            'state' => $request->state,
+            'city' => $request->city,
+            'e_p' => $request->password,
+            'password' => Hash::make($request->password),
+            'status' => "0",
+            'role' => "user",
+            'payment_receipt' => $imageName,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Fetch inserted user to get data for popup
+        $user = DB::table('users_list')->where('id', $insertedId)->first();
+
+        return response()->json([
+            'success' => 'true',
+            'message' => 'User Add',
+            'name' => $user->name,
+            'meid' => $user->member_id,
+            'pwd' => $user->e_p,
+        ]);
     }
 
     public function joinnow()

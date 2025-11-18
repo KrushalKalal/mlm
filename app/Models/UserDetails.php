@@ -12,7 +12,6 @@ class UserDetails extends Model
         'sponsor_id',
         'sponsor_name',
         'refer_id',
-        'direction',
         'name',
         'member_id',
         'joining_date',

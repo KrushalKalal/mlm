@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Hash;
 use DB;
 use Crypt;
+use Illuminate\Support\Facades\Log;
 class AddUserController extends Controller
 {
     public function index()
@@ -453,113 +454,341 @@ class AddUserController extends Controller
     //     }
     // }
 
+    // public function activate(Request $request)
+    // {
+
+    //     //dd("hear");
+    //     $cashback = Cashback::first();
+
+    //     if ($request->status == 1) {
+    //         $datageting = $this->getuserrecord($request);
+    //         if ($datageting) {
+
+    //             $userlistgetdata = DB::table("users_list")->where("id", $request->id)->first();
+    //             $datagetlist = User::where("member_id", $userlistgetdata->member_id)->first();
+    //             $dataget = $datagetlist->id;
+    //             $user = User::findOrFail($dataget);
+    //             $user->status = $request->status;
+    //             $user->created_at = now();
+    //             $user->updated_at = now();
+    //             $user->save();
+
+    //             $userlist = User::where("id", $dataget)->first();
+    //             $package = Package::where('id', $user->package_id)->first();
+
+    //             $amount = $package->mrp; // ₹500
+    //             $rate = $cashback->cashback; // 15%
+    //             $total = ($amount * $rate) / 100;
+
+    //             $currentReferId = $userlist->refer_id;
+    //             $level = 1;
+    //             $maxLevels = 6;
+    //             $adminReceived = false;
+
+    //             while ($currentReferId && $level <= $maxLevels) {
+    //                 $referrer = User::where("member_id", $currentReferId)->first();
+
+    //                 if (!$referrer) {
+    //                     break;
+    //                 }
+
+    //                 if ($referrer->role == "admin" && $adminReceived) {
+    //                     break;
+    //                 }
+
+    //                 $levelBonus = LevelBonus::where("level", "Level $level")->first();
+    //                 $bonusAmount = $levelBonus->bonus ?? 0;
+
+    //                 if ($bonusAmount > 0) {
+    //                     // Check if entry already exists for this user and level
+    //                     // $existingIncome = MembersIncome::where('member_id', $referrer->member_id)
+    //                     //     ->where('level_id', "Level $level")
+    //                     //     ->exists();
+
+    //                     // if (!$existingIncome) {
+    //                     // Members Income Entry
+    //                     $incomeEntry = new MembersIncome();
+    //                     $incomeEntry->member_id = $referrer->member_id;
+    //                     $incomeEntry->level_id = "Level $level";
+    //                     $incomeEntry->income = $bonusAmount;
+    //                     $incomeEntry->remarks = "Level Income from " . $userlist->member_id . " | Level $level";
+    //                     $incomeEntry->S_id = $referrer->sponsor_id;
+    //                     $incomeEntry->R_id = $referrer->refer_id;
+    //                     $incomeEntry->u_id = $referrer->member_id;
+    //                     $incomeEntry->save();
+
+    //                     // Ledger Entry
+    //                     $ledgerTotal = Ledger::where("member_id", $referrer->member_id)->sum('Cr');
+    //                     $ledgerEntry = new Ledger();
+    //                     $ledgerEntry->member_id = $referrer->member_id;
+    //                     $ledgerEntry->remarks = "Level Income from " . $userlist->member_id . " | Level $level";
+    //                     $ledgerEntry->Dr = "0";
+    //                     $ledgerEntry->Cr = $bonusAmount;
+    //                     $ledgerEntry->Total = $ledgerTotal + $bonusAmount;
+    //                     $ledgerEntry->save();
+    //                     // }
+
+    //                     if ($referrer->role == "admin") {
+    //                         $adminReceived = true;
+    //                     }
+    //                 }
+    //                 $userle = User::where("member_id", $referrer->refer_id)->first();
+    //                 $currentReferId = $userle->member_id;
+    //                 $level++;
+    //             }
+
+    //             $existingWallet = Wallet::where('member_id', $user->member_id)->exists();
+
+    //             if (!$existingWallet) {
+    //                 $wallet = new Wallet();
+    //                 $wallet->member_id = $user->member_id;
+    //                 $wallet->cashback = $cashback->cashback;
+    //                 $wallet->total = $total;
+    //                 $wallet->mrp = $package->mrp;
+    //                 $wallet->package_id = $user->package_id;
+    //                 $wallet->save();
+    //             }
+
+    //             return response()->json(['success' => 'true', 'message' => 'User Payment Distributed Successfully']);
+    //         } else {
+    //             return response()->json(['success' => 'true', 'message' => 'User Deactivated']);
+    //         }
+    //     } else {
+    //         DB::table("users_list")->where("id", $request->id)->update(["status" => 2]);
+    //         return response()->json(['success' => 'true', 'message' => 'User Deactivated']);
+    //     }
+
+    // }
+
+
     public function activate(Request $request)
     {
+        \Log::info("=== ACTIVATION REQUEST ===", ['request_id' => $request->id]);
 
-        //dd("hear");
-        $cashback = Cashback::first();
-
-        if ($request->status == 1) {
-            $datageting = $this->getuserrecord($request);
-            if ($datageting) {
-
-                $userlistgetdata = DB::table("users_list")->where("id", $request->id)->first();
-                $datagetlist = User::where("member_id", $userlistgetdata->member_id)->first();
-                $dataget = $datagetlist->id;
-                $user = User::findOrFail($dataget);
-                $user->status = $request->status;
-                $user->created_at = now();
-                $user->updated_at = now();
-                $user->save();
-
-                $userlist = User::where("id", $dataget)->first();
-                $package = Package::where('id', $user->package_id)->first();
-
-                $amount = $package->mrp; // ₹500
-                $rate = $cashback->cashback; // 15%
-                $total = ($amount * $rate) / 100;
-
-                $currentReferId = $userlist->refer_id;
-                $level = 1;
-                $maxLevels = 6;
-                $adminReceived = false;
-
-                while ($currentReferId && $level <= $maxLevels) {
-                    $referrer = User::where("member_id", $currentReferId)->first();
-
-                    if (!$referrer) {
-                        break;
-                    }
-
-                    if ($referrer->role == "admin" && $adminReceived) {
-                        break;
-                    }
-
-                    $levelBonus = LevelBonus::where("level", "Level $level")->first();
-                    $bonusAmount = $levelBonus->bonus ?? 0;
-
-                    if ($bonusAmount > 0) {
-                        // Check if entry already exists for this user and level
-                        // $existingIncome = MembersIncome::where('member_id', $referrer->member_id)
-                        //     ->where('level_id', "Level $level")
-                        //     ->exists();
-
-                        // if (!$existingIncome) {
-                        // Members Income Entry
-                        $incomeEntry = new MembersIncome();
-                        $incomeEntry->member_id = $referrer->member_id;
-                        $incomeEntry->level_id = "Level $level";
-                        $incomeEntry->income = $bonusAmount;
-                        $incomeEntry->remarks = "Level Income from " . $userlist->member_id . " | Level $level";
-                        $incomeEntry->S_id = $referrer->sponsor_id;
-                        $incomeEntry->R_id = $referrer->refer_id;
-                        $incomeEntry->u_id = $referrer->member_id;
-                        $incomeEntry->save();
-
-                        // Ledger Entry
-                        $ledgerTotal = Ledger::where("member_id", $referrer->member_id)->sum('Cr');
-                        $ledgerEntry = new Ledger();
-                        $ledgerEntry->member_id = $referrer->member_id;
-                        $ledgerEntry->remarks = "Level Income from " . $userlist->member_id . " | Level $level";
-                        $ledgerEntry->Dr = "0";
-                        $ledgerEntry->Cr = $bonusAmount;
-                        $ledgerEntry->Total = $ledgerTotal + $bonusAmount;
-                        $ledgerEntry->save();
-                        // }
-
-                        if ($referrer->role == "admin") {
-                            $adminReceived = true;
-                        }
-                    }
-                    $userle = User::where("member_id", $referrer->refer_id)->first();
-                    $currentReferId = $userle->member_id;
-                    $level++;
-                }
-
-                $existingWallet = Wallet::where('member_id', $user->member_id)->exists();
-
-                if (!$existingWallet) {
-                    $wallet = new Wallet();
-                    $wallet->member_id = $user->member_id;
-                    $wallet->cashback = $cashback->cashback;
-                    $wallet->total = $total;
-                    $wallet->mrp = $package->mrp;
-                    $wallet->package_id = $user->package_id;
-                    $wallet->save();
-                }
-
-                return response()->json(['success' => 'true', 'message' => 'User Payment Distributed Successfully']);
-            } else {
-                return response()->json(['success' => 'true', 'message' => 'User Deactivated']);
-            }
-        } else {
-            DB::table("users_list")->where("id", $request->id)->update(["status" => 2]);
-            return response()->json(['success' => 'true', 'message' => 'User Deactivated']);
+        // 1) Get user from users_list
+        $userListRow = DB::table('users_list')->where('id', $request->id)->first();
+        if (!$userListRow) {
+            return response()->json(['success' => false, 'message' => 'User not found in users_list']);
         }
 
+        if ((int) $request->status === 1) {
+            // 2) Create or Update User in main users table
+            $user = User::where('member_id', $userListRow->member_id)->first();
+
+            if (!$user) {
+                $user = new User();
+                $user->name = $userListRow->name;
+                $user->email = $userListRow->email;
+                $user->package_id = $userListRow->package_id;
+                $user->confirm_phone = $userListRow->confirm_phone;
+                $user->role = $userListRow->role ?? 'user';
+                $user->member_id = $userListRow->member_id;
+                $user->sponsor_id = $userListRow->sponsor_id;
+                $user->sponsor_name = $userListRow->sponsor_name;
+                $user->refer_id = $userListRow->refer_id;
+                $user->direction = $userListRow->direction;
+                $user->joining_date = $userListRow->joining_date;
+                $user->mobile_no = $userListRow->mobile_no;
+                $user->password = $userListRow->password;
+                $user->status = 1;
+                $user->created_at = now();
+                $user->updated_at = now();
+            } else {
+                $user->status = 1;
+                $user->confirm_phone = $userListRow->confirm_phone;
+                $user->direction = $userListRow->direction;
+                $user->updated_at = now();
+            }
+            $user->save();
+
+            // Sync users_list status
+            DB::table('users_list')->where('id', $request->id)->update(['status' => 1, 'updated_at' => now()]);
+
+            \Log::info("User Activated Successfully", ['member_id' => $user->member_id]);
+
+            // ==================== DIRECT INCOME ====================
+            if ($user->refer_id) {
+                $referrer = User::where('member_id', $user->refer_id)->first();
+
+                if ($referrer) {
+                    $bonusAmount = LevelBonus::where('level', 'Level 1')->first()->bonus ?? 200;
+
+                    if ($bonusAmount > 0) {
+                        membersincome::create([
+                            'member_id' => $referrer->member_id,
+                            'level_id' => 'Level 1',
+                            'matching_level' => null,
+                            'income' => $bonusAmount,
+                            'status' => 1,
+                            'remarks' => "Direct Income from {$user->member_id}",
+                            'S_id' => $referrer->sponsor_id ?? $referrer->member_id,
+                            'R_id' => $referrer->refer_id ?? $referrer->member_id,
+                            'u_id' => $referrer->member_id,
+                        ]);
+
+                        $totalCr = ledger::where('member_id', $referrer->member_id)->sum('Cr');
+                        ledger::create([
+                            'member_id' => $referrer->member_id,
+                            'remarks' => "Direct Income from {$user->member_id}",
+                            'Dr' => 0,
+                            'Cr' => $bonusAmount,
+                            'Total' => $totalCr + $bonusAmount,
+                        ]);
+
+                        \Log::info("Direct Income Credited", [
+                            'to' => $referrer->member_id,
+                            'from' => $user->member_id,
+                            'amount' => $bonusAmount
+                        ]);
+                    }
+                }
+            }
+
+            // ==================== MATCHING INCOME (Level-wise) ====================
+            \Log::info("Starting Level-wise Matching Income Distribution", ['new_user' => $user->member_id]);
+            $this->distributeMatchingIncomeWithLogs($user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User Activated Successfully',
+                'activated_user' => $user->member_id
+            ]);
+
+        } else {
+            // Deactivate
+            DB::table('users_list')->where('id', $request->id)->update(['status' => 2, 'updated_at' => now()]);
+            $user = User::where('member_id', $userListRow->member_id)->first();
+            if ($user) {
+                $user->status = 0;
+                $user->save();
+            }
+            return response()->json(['success' => true, 'message' => 'User Deactivated']);
+        }
+    }
+    // ============== MAIN MATCHING FUNCTION WITH DETAILED LOGS ==============
+    private function distributeMatchingIncomeWithLogs(User $activatedUser)
+    {
+        $bonusPerPair = LevelBonus::where('level', 'Level 1')->first()->bonus ?? 200;
+        if ($bonusPerPair <= 0)
+            return;
+
+        $allActive = User::where('status', 1)
+            ->select('member_id', 'refer_id', 'direction')
+            ->get()
+            ->keyBy('member_id');
+
+        // Build children map
+        $children = [];
+        foreach ($allActive as $u) {
+            if ($u->refer_id && isset($allActive[$u->refer_id])) {
+                $children[$u->refer_id][] = $u->member_id;
+            }
+        }
+
+        // Upline
+        $upline = [];
+        $cur = $activatedUser;
+        while ($cur && $cur->refer_id && !in_array($cur->refer_id, $upline, true)) {
+            $upline[] = $cur->refer_id;
+            $cur = $allActive[$cur->refer_id] ?? null;
+        }
+
+        foreach ($upline as $uplineId) {
+            $levelCounts = $this->getLevelWiseCountsFast($uplineId, $children, $allActive);
+            $totalCr = ledger::where('member_id', $uplineId)->sum('Cr');
+
+            foreach ($levelCounts as $level => $count) {
+                $left = $count['left'] ?? 0;
+                $right = $count['right'] ?? 0;
+                $currentPairs = min($left, $right);
+
+
+                $alreadyPaidForThisLevel = membersincome::where('member_id', $uplineId)
+                    ->where('level_id', 'Matching')
+                    ->where('matching_level', $level)
+                    ->sum('income');
+
+                $alreadyPairs = $alreadyPaidForThisLevel / $bonusPerPair;
+                $newPairs = $currentPairs - $alreadyPairs;
+
+                if ($newPairs > 0) {
+                    $newIncome = $newPairs * $bonusPerPair;
+
+                    membersincome::create([
+                        'member_id' => $uplineId,
+                        'level_id' => 'Matching',
+                        'matching_level' => $level,
+                        'income' => $newIncome,
+                        'status' => 1,
+                        'remarks' => "Matching Income Level {$level} | {$newPairs} new pair(s) | Total: {$currentPairs}",
+                        'S_id' => $uplineId,
+                        'R_id' => $uplineId,
+                        'u_id' => $uplineId,
+                    ]);
+
+                    $totalCr += $newIncome;
+                    ledger::create([
+                        'member_id' => $uplineId,
+                        'remarks' => "Matching Level {$level} | {$newPairs} new pair(s)",
+                        'Dr' => 0,
+                        'Cr' => $newIncome,
+                        'Total' => $totalCr,
+                    ]);
+
+                    \Log::info("MATCHING → {$uplineId} | Level {$level} | +{$newPairs} pair(s) → +₹{$newIncome}");
+                }
+            }
+        }
+    }
+    // Super Fast & Safe Level Count
+    private function getLevelWiseCountsFast($rootId, $children, $allActive)
+    {
+        $levels = [];
+
+
+        foreach ($children[$rootId] ?? [] as $childId) {
+            $child = $allActive[$childId] ?? null;
+            if (!$child || !in_array($child->direction, ['left', 'right']))
+                continue;
+
+
+            $levels[1]['left'] = ($levels[1]['left'] ?? 0) + ($child->direction === 'left' ? 1 : 0);
+            $levels[1]['right'] = ($levels[1]['right'] ?? 0) + ($child->direction === 'right' ? 1 : 0);
+
+            $this->addChildrenRecursively($childId, 2, $children, $allActive, $levels);
+        }
+
+        \Log::info("PERFECT Level Counts for {$rootId}", $levels);
+        return $levels;
     }
 
+    private function addChildrenRecursively($parentId, $currentLevel, $children, $allActive, &$levels)
+    {
+        $queue = new \SplQueue();
 
+
+        foreach ($children[$parentId] ?? [] as $childId) {
+            $queue->enqueue(['id' => $childId, 'lvl' => $currentLevel]);
+        }
+
+        while (!$queue->isEmpty()) {
+            $item = $queue->dequeue();
+            $id = $item['id'];
+            $lvl = $item['lvl'];
+
+            $user = $allActive[$id] ?? null;
+            if (!$user || !in_array($user->direction, ['left', 'right']))
+                continue;
+
+            $levels[$lvl]['left'] = ($levels[$lvl]['left'] ?? 0) + ($user->direction === 'left' ? 1 : 0);
+            $levels[$lvl]['right'] = ($levels[$lvl]['right'] ?? 0) + ($user->direction === 'right' ? 1 : 0);
+
+
+            foreach ($children[$id] ?? [] as $grandChildId) {
+                $queue->enqueue(['id' => $grandChildId, 'lvl' => $lvl + 1]);
+            }
+        }
+    }
 
     public function getuserrecord(Request $request)
     {

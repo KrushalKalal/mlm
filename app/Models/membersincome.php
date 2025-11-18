@@ -10,7 +10,15 @@ class membersincome extends Model
     use HasFactory;
     protected $table = 'membersincome';
     protected $fillable = [
-       'member_id', 'level_id', 'income', 'remarks', 'S_id', 'R_id','u_id'
+        'member_id',
+        'level_id',
+        'matching_level',
+        'income',
+        'status',
+        'remarks',
+        'S_id',
+        'R_id',
+        'u_id',
     ];
 
 }
